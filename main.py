@@ -16,7 +16,6 @@ def set_commands(name, *additional):
         commands[name] = func
         for command in additional:
             commands[command] = func
-        return func
     return inner
 
 
@@ -145,7 +144,7 @@ def show_all():
     table.add_column("Name")
     table.add_column("Phone number")
     for _, row in data.iterrows():
-        table.add_row(row["Name"], row["Phone number"])
+        table.add_row(row["Name"], str(row["Phone number"]))
     return table
 
 
