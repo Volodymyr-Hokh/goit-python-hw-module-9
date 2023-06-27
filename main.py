@@ -11,6 +11,7 @@ from rich.table import Table
 
 commands = {}
 
+
 def set_commands(name, *additional):
     def inner(func):
         commands[name] = func
@@ -57,14 +58,13 @@ def add(*args):
 
     if name_exists:
         return f"Name {name} already exists."\
-        "If you want to change it, please type 'change <name> <phone number>'"
+            "If you want to change it, please type 'change <name> <phone number>'"
     else:
         new_row = {"Name": name, "Phone number": phone_number}
         data = data._append(new_row, ignore_index=True)
 
     data.to_csv("data.csv", index=False)
     return f"User {name} added successfully"
-
 
 
 @set_commands("change")
@@ -78,7 +78,7 @@ def change(*args):
 
     if not name_exists:
         return f"Name {name} doesn`t exists."\
-        "If you want to add it, please type 'add <name> <phone number>'"
+            "If you want to add it, please type 'add <name> <phone number>'"
     else:
         data.loc[data["Name"] == name, "Phone number"] = phone_number
 
@@ -86,10 +86,9 @@ def change(*args):
     return f"Phone number for {name} has been updated."
 
 
-
 @set_commands("clear")
 @input_error
-def clear():
+def clear(*args):
     """Clear the console"""
     system = platform.system()
     if system == "Windows":
@@ -102,14 +101,14 @@ def clear():
 
 @set_commands("hello")
 @input_error
-def hello():
+def hello(*args):
     """Greet user"""
     return "How can I help you?"
 
 
 @set_commands("help")
 @input_error
-def help_command():
+def help_command(*args):
     """Show all commands available"""
     table = Table()
     table.add_column("Command")
@@ -129,7 +128,7 @@ def phone(*args):
 
     if not name_exists:
         return f"Name {name} doesn`t exists."\
-        "If you want to add it, please type 'add <name> <phone number>'"
+            "If you want to add it, please type 'add <name> <phone number>'"
     else:
         phone_number = data.loc[data["Name"] == name, "Phone number"].values[0]
         return f"Phone number for {name}: {phone_number}"
@@ -137,7 +136,7 @@ def phone(*args):
 
 @set_commands("showall")
 @input_error
-def show_all():
+def show_all(*args):
     """Show all users"""
     data = pd.read_csv("data.csv")
     table = Table(title="Users")
@@ -150,12 +149,14 @@ def show_all():
 
 @set_commands("exit", "close", "goodbye")
 @input_error
-def exit():
+def exit(*args):
     """Interrupt program"""
     sys.exit(0)
 
 
 def completer(text, state):
+    if not text.isalpha():
+        return None
     options = [cmd for cmd in commands.keys() if cmd.startswith(text.lower())]
     if not options:
         return None
@@ -172,9 +173,9 @@ def parse_command(user_input: str):
         return "Please enter a command name"
 
     if user_command not in commands.keys():
-        best_match, match_ratio = process.extractOne(user_command, 
-                                                    commands.keys(), 
-                                                    scorer=fuzz.partial_ratio)
+        best_match, match_ratio = process.extractOne(user_command,
+                                                     commands.keys(),
+                                                     scorer=fuzz.partial_ratio)
         if match_ratio >= 60:
             return f"Command not found.\nPerhaps you meant '{best_match}'"
         else:
@@ -193,8 +194,8 @@ def main():
 
         if result:
             print(result)
-        
-        
+
+
 if __name__ == "__main__":
     try:
         main()
