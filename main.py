@@ -1,12 +1,13 @@
+import logging
 import os
-import sys
 import platform
+import sys
 
 from fuzzywuzzy import fuzz, process
 import pandas as pd
 import readline
-from rich import print
-from rich.table import Table
+# from rich import print
+# from rich.table import Table
 
 
 commands = {}
@@ -110,12 +111,10 @@ def hello(*args):
 @input_error
 def help_command(*args):
     """Show all commands available."""
-    table = Table()
-    table.add_column("Command")
-    table.add_column("Description")
+    all_commands = ""
     for command, func in commands.items():
-        table.add_row(command, func.__doc__)
-    return table
+        all_commands += f"{command}: {func.__doc__}\n"
+    return all_commands
 
 
 @set_commands("phone")
@@ -127,7 +126,7 @@ def phone(*args):
     data, name_exists = open_df_and_check_name(name)
 
     if not name_exists:
-        return f"Name {name} doesn`t exists."\
+        return f"Name {name} doesn`t exists. "\
             "If you want to add it, please type 'add <name> <phone number>'."
     else:
         phone_number = data.loc[data["Name"] == name, "Phone number"].values[0]
@@ -139,12 +138,10 @@ def phone(*args):
 def show_all(*args):
     """Show all users."""
     data = pd.read_csv("data.csv")
-    table = Table(title="Users")
-    table.add_column("Name")
-    table.add_column("Phone number")
+    all_users = ""
     for _, row in data.iterrows():
-        table.add_row(str(row["Name"]), str(row["Phone number"]))
-    return table
+        all_users += f"{row['Name']}: {row['Phone number']}\n"
+    return all_users
 
 
 @set_commands("exit", "close", "goodbye")
@@ -173,6 +170,7 @@ def parse_command(user_input: str):
         return "Please enter a command name."
 
     if user_command not in commands.keys():
+        logging.basicConfig(level=logging.ERROR)
         best_match, match_ratio = process.extractOne(user_command,
                                                      commands.keys(),
                                                      scorer=fuzz.partial_ratio)
