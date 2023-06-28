@@ -50,7 +50,7 @@ def open_df_and_check_name(name: str) -> tuple:
 @set_commands("add")
 @input_error
 def add(*args):
-    """Take as input username and phone number and add them to the base"""
+    """Take as input username and phone number and add them to the base."""
     name = args[0]
     phone_number = args[1]
 
@@ -58,19 +58,19 @@ def add(*args):
 
     if name_exists:
         return f"Name {name} already exists."\
-            "If you want to change it, please type 'change <name> <phone number>'"
+            "If you want to change it, please type 'change <name> <phone number>'."
     else:
         new_row = {"Name": name, "Phone number": phone_number}
         data = data._append(new_row, ignore_index=True)
 
     data.to_csv("data.csv", index=False)
-    return f"User {name} added successfully"
+    return f"User {name} added successfully."
 
 
 @set_commands("change")
 @input_error
 def change(*args):
-    """Take as input username and phone number and changes the corresponding data"""
+    """Take as input username and phone number and changes the corresponding data."""
     name = args[0]
     phone_number = args[1]
 
@@ -78,7 +78,7 @@ def change(*args):
 
     if not name_exists:
         return f"Name {name} doesn`t exists."\
-            "If you want to add it, please type 'add <name> <phone number>'"
+            "If you want to add it, please type 'add <name> <phone number>'."
     else:
         data.loc[data["Name"] == name, "Phone number"] = phone_number
 
@@ -89,27 +89,27 @@ def change(*args):
 @set_commands("clear")
 @input_error
 def clear(*args):
-    """Clear the console"""
+    """Clear the console."""
     system = platform.system()
     if system == "Windows":
         os.system("cls")
     elif system in ("Linux", "Darwin"):
         os.system("clear")
     else:
-        return "Sorry, this command is not available on your operating system"
+        return "Sorry, this command is not available on your operating system."
 
 
 @set_commands("hello")
 @input_error
 def hello(*args):
-    """Greet user"""
+    """Greet user."""
     return "How can I help you?"
 
 
 @set_commands("help")
 @input_error
 def help_command(*args):
-    """Show all commands available"""
+    """Show all commands available."""
     table = Table()
     table.add_column("Command")
     table.add_column("Description")
@@ -121,36 +121,36 @@ def help_command(*args):
 @set_commands("phone")
 @input_error
 def phone(*args):
-    """Take as input username and show user`s phone number"""
+    """Take as input username and show user`s phone number."""
     name = args[0]
 
     data, name_exists = open_df_and_check_name(name)
 
     if not name_exists:
         return f"Name {name} doesn`t exists."\
-            "If you want to add it, please type 'add <name> <phone number>'"
+            "If you want to add it, please type 'add <name> <phone number>'."
     else:
         phone_number = data.loc[data["Name"] == name, "Phone number"].values[0]
-        return f"Phone number for {name}: {phone_number}"
+        return f"Phone number for {name}: {phone_number}."
 
 
 @set_commands("showall")
 @input_error
 def show_all(*args):
-    """Show all users"""
+    """Show all users."""
     data = pd.read_csv("data.csv")
     table = Table(title="Users")
     table.add_column("Name")
     table.add_column("Phone number")
     for _, row in data.iterrows():
-        table.add_row(row["Name"], str(row["Phone number"]))
+        table.add_row(str(row["Name"]), str(row["Phone number"]))
     return table
 
 
 @set_commands("exit", "close", "goodbye")
 @input_error
 def exit(*args):
-    """Interrupt program"""
+    """Interrupt program."""
     sys.exit(0)
 
 
@@ -170,14 +170,14 @@ def parse_command(user_input: str):
         user_command = user_input.split()[0].lower()
         command_arguments = user_input.split()[1:]
     except IndexError:
-        return "Please enter a command name"
+        return "Please enter a command name."
 
     if user_command not in commands.keys():
         best_match, match_ratio = process.extractOne(user_command,
                                                      commands.keys(),
                                                      scorer=fuzz.partial_ratio)
         if match_ratio >= 60:
-            return f"Command not found.\nPerhaps you meant '{best_match}'"
+            return f"Command not found.\nPerhaps you meant '{best_match}'."
         else:
             return "Command not found.\nTo view all available commands, enter 'help'."
     else:
