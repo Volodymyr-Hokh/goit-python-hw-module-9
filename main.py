@@ -6,8 +6,6 @@ import sys
 from fuzzywuzzy import fuzz, process
 import pandas as pd
 import readline
-# from rich import print
-# from rich.table import Table
 
 
 commands = {}
@@ -26,7 +24,7 @@ def input_error(func):
         try:
             return func(*args)
         except IndexError:
-            return "Enter all require arguments please."
+            return "Enter all require arguments please.\nTo see more info type 'help'."
     inner.__doc__ = func.__doc__
     return inner
 
@@ -36,7 +34,6 @@ def open_df_and_check_name(name: str) -> tuple:
     and bool value True if name already exist in dataframe, False otherwise."""
     try:
         data = pd.read_csv("data.csv")
-
     except FileNotFoundError:
         data = pd.DataFrame()
 
