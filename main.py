@@ -134,7 +134,10 @@ def phone(*args):
 @input_error
 def show_all(*args):
     """Show all users."""
-    data = pd.read_csv("data.csv")
+    try:
+        data = pd.read_csv("data.csv")
+    except FileNotFoundError:
+        return "No data to show"
     all_users = ""
     for _, row in data.iterrows():
         all_users += f"{row['Name']}: {row['Phone number']}\n"
