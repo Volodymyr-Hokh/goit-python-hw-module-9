@@ -1,10 +1,11 @@
+import csv
 import logging
 import os
 import platform
+import re
 import sys
 
 from fuzzywuzzy import fuzz, process
-import pandas as pd
 import readline
 
 
@@ -29,20 +30,37 @@ def input_error(func):
     return inner
 
 
-def open_df_and_check_name(name: str) -> tuple:
-    """Take as input username. Return tuple with dataframe 
+def open_file_and_check_name(name: str) -> tuple:
+    """Take as input username. Return tuple with 
+     dictionary in which key is the name and value is the phone number 
     and bool value True if name already exist in dataframe, False otherwise."""
     try:
-        data = pd.read_csv("data.csv")
-    except FileNotFoundError:
-        data = pd.DataFrame()
+        with open("data.csv") as file:
+            reader = csv.DictReader(file)
+            data = {}
+            for row in reader:
+                username = row["Name"]
+                phone = row["Phone number"]
+                data[username] = phone
 
-    if "Name" in data.columns:
-        name_exists = (data["Name"] == name).any()
-    else:
-        name_exists = False
+    except FileNotFoundError:
+        data = {}
+
+    name_exists = bool(data.get(name))
 
     return (data, name_exists)
+
+
+def write_to_csv(data: dict, file_path: str):
+    fieldnames = ["Name", "Phone number"]
+
+    with open(file_path, "w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+
+        for name, phone in data.items():
+            writer.writerow({"Name": name, "Phone number": phone})
 
 
 @set_commands("add")
@@ -52,16 +70,15 @@ def add(*args):
     name = args[0]
     phone_number = args[1]
 
-    data, name_exists = open_df_and_check_name(name)
+    data, name_exists = open_file_and_check_name(name)
 
     if name_exists:
         return f"Name {name} already exists."\
             "If you want to change it, please type 'change <name> <phone number>'."
     else:
-        new_row = {"Name": name, "Phone number": phone_number}
-        data = data._append(new_row, ignore_index=True)
+        data[name] = phone_number
 
-    data.to_csv("data.csv", index=False)
+    write_to_csv(data, "data.csv")
     return f"User {name} added successfully."
 
 
@@ -70,17 +87,17 @@ def add(*args):
 def change(*args):
     """Take as input username and phone number and changes the corresponding data."""
     name = args[0]
-    phone_number = args[1]
+    phone_number = str(args[1])
 
-    data, name_exists = open_df_and_check_name(name)
+    data, name_exists = open_file_and_check_name(name)
 
     if not name_exists:
         return f"Name {name} doesn`t exists."\
             "If you want to add it, please type 'add <name> <phone number>'."
     else:
-        data.loc[data["Name"] == name, "Phone number"] = phone_number
+        data[name] = phone_number
 
-    data.to_csv("data.csv", index=False)
+    write_to_csv(data, "data.csv")
     return f"Phone number for {name} has been updated."
 
 
@@ -120,31 +137,39 @@ def phone(*args):
     """Take as input username and show user`s phone number."""
     name = args[0]
 
-    data, name_exists = open_df_and_check_name(name)
+    data, name_exists = open_file_and_check_name(name)
 
     if not name_exists:
         return f"Name {name} doesn`t exists. "\
             "If you want to add it, please type 'add <name> <phone number>'."
     else:
-        phone_number = data.loc[data["Name"] == name, "Phone number"].values[0]
+        phone_number = data[name]
         return f"Phone number for {name}: {phone_number}."
 
 
-@set_commands("showall")
+@set_commands("show all")
 @input_error
 def show_all(*args):
     """Show all users."""
     try:
-        data = pd.read_csv("data.csv")
+        with open("data.csv") as file:
+            reader = csv.DictReader(file)
+            data = {}
+            for row in reader:
+                username = row["Name"]
+                phone = row["Phone number"]
+                data[username] = phone
+
     except FileNotFoundError:
-        return "No data to show"
+        data = {}
+
     all_users = ""
-    for _, row in data.iterrows():
-        all_users += f"{row['Name']}: {row['Phone number']}\n"
+    for name, phone in data.items():
+        all_users += f"{name}: {phone}\n"
     return all_users
 
 
-@set_commands("exit", "close", "goodbye")
+@set_commands("exit", "close", "good bye")
 @input_error
 def exit(*args):
     """Interrupt program."""
@@ -163,9 +188,14 @@ def completer(text, state):
 
 
 def parse_command(user_input: str):
+    match = re.search(r"^show\s|^good\s", user_input.lower())
     try:
-        user_command = user_input.split()[0].lower()
-        command_arguments = user_input.split()[1:]
+        if match:
+            user_command = " ".join(user_input.split()[:2]).lower()
+            command_arguments = user_input.split()[2:]
+        else:
+            user_command = user_input.split()[0].lower()
+            command_arguments = user_input.split()[1:]
     except IndexError:
         return "Please enter a command name."
 
